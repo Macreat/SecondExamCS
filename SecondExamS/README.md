@@ -46,4 +46,5 @@ Pantalla OLED: Utilice una pantalla OLED para mostrar información del sistema.
 6. Indicador de Estado LED
 * El LED debe encenderse (ON) si el resultado del cálculo es positivo.
 * El LED debe apagarse (OFF) si el resultado es cero o negativo.
-  
+ 
+ 

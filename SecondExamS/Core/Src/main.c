@@ -21,7 +21,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
+#include <math.h>
 
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
+
+#include "ring_buffer.h"
+#include "keypad.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,22 +55,26 @@ UART_HandleTypeDef huart2;
 
 // receive max 3 characthers on hexa for each buffer
 
-#define KEYPAD1_RB_LEN 3
+#define KEYPAD_RB_LEN 3
 uint8_t keypad_data = 0xFF;
-uint8_t keypad_buffer1[KEYPAD1_RB_LEN];
-ring_buffer_t keypad1_rb;
+uint8_t keypad_buffer[KEYPAD_RB_LEN];
+ring_buffer_t keypad_rb;
 
 // second buffer
 
-#define KEYPAD2_RB_LEN 3
-// uint8_t keypad_data1 = 0xFF;
-uint8_t keypad_buffer2[KEYPAD2_RB_LEN];
-ring_buffer_t keypad2_rb;
+#define KEYPAD1_RB_LEN 3
+uint8_t keypad_data1 = 0xFF;
+uint8_t keypad_buffer1[KEYPAD1_RB_LEN];
+ring_buffer_t keypad1_rb;
 
 #define USART2_RB_LEN 1
 uint8_t usart2_data = 0xFF;
 uint8_t usart2_buffer[USART2_RB_LEN];
 ring_buffer_t usart2_rb;
+
+// variable declaration for UART communication
+uint8_t HB[] = " system  arithmetic : active \n\r";
+
 
 /* USER CODE END PV */
 
@@ -78,6 +89,67 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// weak function to transmit via UART
+int _write(int file, char *ptr, int len)
+{
+  HAL_UART_Transmit(&huart2, (uint8_t *)ptr, len, 10);
+  return len;
+}
+
+// implementing reception callback for USART entrys
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  /* Data received in USART2 */
+  if (huart->Instance == USART2)
+  {
+    // selecting of arithmetic operation (2COND REQUIREMENT)
+    if (usart2_data == '+' || usart2_data == '-' || usart2_data == '*' || usart2_data == '/')
+    {
+      ring_buffer_write(&usart2_rb, usart2_data);
+      if (ring_buffer_is_full(&usart2_rb) != 0)
+      {
+        // Transmit "receiving data" message via USART2
+        printf("uSart buffer FULL\r\n");
+      }
+      HAL_UART_Transmit(&huart2, (uint8_t *)"receiving data from UART \r\n", 25, HAL_MAX_DELAY);
+    }
+    HAL_UART_Receive_IT(&huart2, &usart2_data, 1);
+
+  }
+}
+
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+
+  uint8_t key_pressed = keypad_scan(GPIO_Pin);
+  if (key_pressed != 0xFF)
+  {
+    if (key_pressed == '#')
+    {
+      ring_buffer_reset(&keypad_rb);
+      ring_buffer_reset(&keypad1_rb);
+      ring_buffer_reset(&usart2_rb);
+      printf("buffers reseted \r\n");
+
+    }
+
+    else if (key_pressed >= '0' && key_pressed <= '9') // validation of numbers on HEXA keyboard
+        {
+          ring_buffer_write(&keypad_rb, key_pressed);
+          if (ring_buffer_is_full(&keypad_rb) != 0)
+          {
+            // Transmit "receiving data" message via USART2
+              printf("ring buffer 1 FULL\r\n");
+
+          }
+        }
+
+    keypad_data = key_pressed;
+  }
+}
 
 /* USER CODE END 0 */
 
@@ -109,10 +181,22 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+
+
   MX_GPIO_Init();
-  MX_I2C1_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  ssd1306_Init();
+  ssd1306_Fill(Black);
+
+  ssd1306_WriteString("Starting ARITHMETIC \nsoftware...\r\n", Font_6x8, White);
+
+  ssd1306_UpdateScreen();
+
+  ring_buffer_init(&usart2_rb, usart2_buffer, USART2_RB_LEN);
+  ring_buffer_init(&keypad_rb, keypad_buffer, KEYPAD_RB_LEN);
+  HAL_UART_Receive_IT(&huart2, &usart2_data, 1);
 
   /* USER CODE END 2 */
 
@@ -120,6 +204,38 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+    // adding logic to implement heartbeat
+    static uint32_t last_heartbeat_time = 0;
+    if (HAL_GetTick() - last_heartbeat_time >= 500) // toggling for 1Hz (500ms on / 500ms off)
+    {
+      HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
+      last_heartbeat_time = HAL_GetTick();
+      HAL_UART_Transmit(&huart2, HB, sizeof(HB) - 1, 100);
+    }
+    // show entry data on OLED for UART and KEYPAD
+    if (keypad_data != 0xFF)
+       {
+         ssd1306_SetCursor(20, 20);
+         ssd1306_WriteString(&keypad_data, Font_11x18, White);
+         ssd1306_UpdateScreen();
+         keypad_data = 0xFF;
+       }
+    if (usart2_data != 0xFF) // for UART operation characther
+      {
+        ssd1306_SetCursor(20, 40);
+        ssd1306_WriteString(&usart2_data, Font_11x18, White);
+        ssd1306_UpdateScreen();
+        usart2_data = 0xFF;
+      }
+
+
+
+
+
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
