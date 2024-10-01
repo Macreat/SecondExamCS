@@ -1,85 +1,17 @@
-README - Examen Final Supletorio - Sistema de Operaciones Aritméticas
-Este proyecto implementa un sistema de operaciones aritméticas utilizando un STM32, con las siguientes funcionalidades:
+README - Supplementary Final Exam - Arithmetic Operations System This project implements an arithmetic operations system using an STM32, with the following functionalities:
 
-Entrada de valores mediante un teclado hexadecimal.
-Selección de operación aritmética a través de comunicación UART.
-Mostrar resultados en una pantalla OLED.
-Indicador LED para mostrar el estado del sistema según el resultado de la operación.
-Criterios de Evaluación
-Funcionalidad (60%): Cada requisito funcional tiene una ponderación equitativa.
-Arquitectura de Código (10%): Uso adecuado de interrupciones, periféricos y librerías externas.
-Optimización (10%): Optimización de consumo energético y uso eficiente de memoria.
-Requisitos del Sistema
-Requisitos No Funcionales
-Indicador LED: El sistema utiliza un LED conectado a la placa para indicar el estado del cálculo.
-Teclado Hexadecimal: Un teclado externo se utiliza para la entrada de los números.
-Puerto de Depuración (UART): Comunicación serie con una PC utilizando USART2 configurado a 115200 baudios.
-Pantalla OLED: Visualización de valores, operaciones y resultados en una pantalla OLED conectada vía I2C.
-Requisitos Funcionales
-Ingreso de Valores vía Teclado:
+Entry of values ​​using a hexadecimal keyboard. Arithmetic operation selection via UART communication. Show results on an OLED screen. LED indicator to show the system status based on the operation result. Evaluation Criteria Functionality (60%): Each functional requirement has equal weighting. Code Architecture (10%): Proper use of interrupts, peripherals and external libraries. Optimization (10%): Optimization of energy consumption and efficient use of memory. System Requirements Non-Functional Requirements LED Indicator: The system uses an LED connected to the board to indicate the status of the calculation. Hexadecimal Keyboard: An external keyboard is used for entry of numbers. Debug Port (UART): Serial communication with a PC using USART2 set to 115200 baud. OLED screen: Display of values, operations and results on an OLED screen connected via I2C. Functional Requirements Entering Values ​​via Keyboard:
 
-El teclado acepta dos números de hasta 3 dígitos cada uno.
-Validación básica de entradas para asegurar la captura de números correctos.
-Selección de Operación vía USART2:
+The keypad accepts two numbers of up to 3 digits each. Basic input validation to ensure correct numbers are captured. Operation Selection via USART2:
 
-A través de la interfaz UART, el usuario selecciona la operación aritmética.
-'+' para suma
-'-' para resta
-'\*' para multiplicación
-'/' para división
-El operador se muestra en la pantalla OLED.
-Mostrar Entradas:
+Through the UART interface, the user selects the arithmetic operation. '+' for addition '-' for subtraction '\*' for multiplication '/' for division The operator is displayed on the OLED screen. Show Entries:
 
-El sistema muestra en la pantalla OLED los dos últimos valores ingresados por el teclado y la última operación recibida vía UART.
-Realizar el Cálculo:
+The system displays on the OLED screen the last two values ​​entered by the keyboard and the last operation received via UART. Perform the Calculation:
 
-Cuando se recibe el carácter '=' por la UART:
-Se realiza la operación seleccionada entre los dos números ingresados.
-El resultado se muestra en la pantalla OLED.
-El resultado también se envía a la PC vía UART.
-Funcionalidad de Reinicio:
+When the character '=' is received by the UART: The selected operation is performed between the two numbers entered. The result is displayed on the OLED screen. The result is also sent to the PC via UART. Reset Functionality:
 
-Al presionar la tecla '#' en el teclado, se reinician los valores de entrada y se limpia la pantalla OLED, dejando el sistema listo para recibir nuevas entradas.
-Indicador de Estado LED:
+Pressing the '#' key on the keyboard resets the input values ​​and clears the OLED display, leaving the system ready to receive new input. LED Status Indicator:
 
-El LED se enciende (ON) si el resultado del cálculo es positivo.
-El LED se apaga (OFF) si el resultado es cero o negativo.
-Estructura del Código
-El código está dividido en diferentes secciones para manejar periféricos, entradas y lógica del sistema. Aquí se resumen las principales funcionalidades y cómo están implementadas:
+The LED turns ON if the calculation result is positive. The LED turns OFF if the result is zero or negative. Code Structure The code is divided into different sections to handle peripherals, inputs and system logic. Here the main functionalities and how they are implemented are summarized:
 
-Inicialización
-Los periféricos como GPIO, I2C y UART se inicializan utilizando las funciones generadas por STM32CubeMX.
-La pantalla OLED se inicializa y se limpia al inicio del programa. Se muestra un mensaje de bienvenida en la pantalla OLED.
-Entrada de Valores y Operadores
-Teclado: Las teclas presionadas se leen a través de interrupciones generadas por los pines configurados como entradas de interrupción externa (EXTI).
-UART: Los operadores aritméticos (+, -, _, /) se leen a través de interrupciones UART utilizando la función HAL_UART_RxCpltCallback().
-Procesamiento de Datos
-Los números ingresados se almacenan en buffers circulares utilizando una implementación de ring_buffer.
-Se implementa la lógica para acumular los dígitos en cada buffer y reconstruir los números enteros cuando se completa la entrada.
-Operaciones Aritméticas
-Una vez que se han ingresado los números y se ha recibido un operador, el sistema realiza la operación aritmética seleccionada cuando se recibe el carácter '='.
-La operación se ejecuta dentro de un switch basado en el operador recibido.
-Indicador de Estado LED
-El sistema activa o desactiva un LED según el resultado de la operación:
-Si el resultado es positivo, el LED se enciende.
-Si el resultado es cero o negativo, el LED se apaga.
-Visualización en la Pantalla OLED
-Los números ingresados, el operador y el resultado final se muestran en la pantalla OLED, utilizando la biblioteca SSD1306.
-Requisitos de Hardware
-STM32 Nucleo Board: Usamos la familia STM32 con I2C para la pantalla OLED y GPIO para la lectura del teclado y el control del LED.
-Teclado Hexadecimal: Se conecta a los pines GPIO configurados como entradas con interrupciones.
-Pantalla OLED (128x64): Utilizada para mostrar los números, operador y resultados.
-LED: Conectado a un pin GPIO de salida para mostrar el estado del sistema.
-Requisitos de Software
-STM32CubeMX: Para la configuración de los periféricos.
-HAL (Hardware Abstraction Layer): Librerías STM32 HAL para manejo de periféricos.
-Biblioteca SSD1306: Para la comunicación con la pantalla OLED.
-Keil uVision/STM32CubeIDE: Herramientas de desarrollo para compilar y cargar el código en la placa STM32.
-Cómo Usar el Sistema
-Encendido: Al encender el sistema, la pantalla OLED mostrará un mensaje de bienvenida.
-Ingresar Valores: Utilice el teclado para ingresar dos números. El sistema almacenará hasta 3 dígitos por número.
-Seleccionar Operación: Ingrese un operador aritmético (+, -, _, /) utilizando el puerto UART.
-Realizar Cálculo: Presione el carácter '=' para realizar la operación seleccionada. El resultado aparecerá en la pantalla OLED y se enviará vía UART.
-Reiniciar: Presione '#' en el teclado para reiniciar las entradas y comenzar una nueva operación.
-Conclusión
-Este proyecto demuestra la integración de múltiples periféricos y dispositivos externos en un sistema STM32, proporcionando una solución para realizar operaciones aritméticas básicas. Las entradas del teclado y UART, junto con la visualización en la pantalla OLED, ofrecen una interfaz intuitiva para el usuario. El uso de interrupciones y buffers circulares asegura un manejo eficiente de las entradas y operaciones.
+Initialization Peripherals such as GPIO, I2C and UART are initialized using the functions generated by STM32CubeMX. The OLED screen is initialized and cleared at the start of the program. A welcome message is displayed on the OLED screen. Input Values ​​and Keyboard Operators: Pressed keys are read through interrupts generated by pins configured as external interrupt inputs (EXTI). UART: Arithmetic operators (+, -, _, /) are read through UART interrupts using the HAL_UART_RxCpltCallback() function. Data Processing Entered numbers are stored in ring buffers using an implementation of ring_buffer. Logic is implemented to accumulate the digits in each buffer and reconstruct the integers when the input is complete. Arithmetic Operations Once numbers have been entered and an operator has been received, the system performs the selected arithmetic operation when the '=' character is received. The operation is executed within a switch based on the received operator. LED Status Indicator The system activates or deactivates an LED depending on the result of the operation: If the result is positive, the LED lights up. If the result is zero or negative, the LED turns off. OLED Screen Display The entered numbers, operator and final result are displayed on the OLED screen, using the SSD1306 library. Hardware Requirements STM32 Nucleo Board: We use the STM32 family with I2C for the OLED display and GPIO for keyboard reading and LED control. Hexadecimal Keyboard: Connects to the GPIO pins configured as inputs with interrupts. OLED screen (128x64): Used to display numbers, operator and results. LED: Connected to a GPIO output pin to display system status. STM32CubeMX Software Requirements: For peripheral configuration. HAL (Hardware Abstraction Layer): STM32 HAL libraries for peripheral management. SSD1306 Library: For communication with the OLED display. Keil uVision/STM32CubeIDE: Development tools to compile and load the code on the STM32 board. How to Use the System Power On: When you turn on the system, the OLED screen will display a welcome message. Enter Values: Use the keyboard to enter two numbers. The system will store up to 3 digits per number. Select Operation: Enter an arithmetic operator (+, -, _, /) using the UART port. Perform Calculation: Press the '=' character to perform the selected operation. The result will appear on the OLED screen and will be sent via UART. Reset: Press '#' on the keyboard to reset the entries and start a new operation. Conclusion This project demonstrates the integration of multiple peripherals and external devices into an STM32 system, providing a solution for performing basic arithmetic operations. Keyboard and UART inputs, along with OLED screen display, offer an intuitive user interface. The use of interrupts and circular buffers ensures efficient handling of inputs and operations.
