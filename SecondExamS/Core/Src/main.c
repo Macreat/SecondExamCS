@@ -138,7 +138,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     }
 
-    else if (key_pressed >= '0' && key_pressed <= '9') // validation of numbers on HEXA keyboard
+    else if (key_pressed >= '0' && key_pressed <= '9' ) // validation of numbers on HEXA keyboard
     {
 
       if (ring_buffer_is_full(&keypad_rb) == 0)
@@ -203,8 +203,12 @@ int main(void)
 
   ssd1306_UpdateScreen();
 
+  //initializing all respectives periphericals
+
   ring_buffer_init(&usart2_rb, usart2_buffer, USART2_RB_LEN);
   ring_buffer_init(&keypad_rb, keypad_buffer, KEYPAD_RB_LEN);
+  ring_buffer_init(&keypad1_rb, keypad_buffer1, KEYPAD1_RB_LEN);
+
   HAL_UART_Receive_IT(&huart2, &usart2_data, 1);
 
   /* USER CODE END 2 */
@@ -259,7 +263,6 @@ int main(void)
     {
 
       HAL_UART_Transmit(&huart2, (uint8_t *)"calculating...", 46, HAL_MAX_DELAY);
-
       uint32_t num1 = 0;
       uint32_t num2 = 0;
       uint8_t digit;
@@ -295,7 +298,7 @@ int main(void)
         result = num1 * num2;
         break;
       case '/':
-        if (num2 != 0) // Validamos división por cero
+        if (num2 != 0) // zero validation
           result = num1 / num2;
         else
         {
@@ -325,7 +328,7 @@ int main(void)
       ssd1306_Fill(Black);
       char result_str[32];
       sprintf(result_str, "%ld () %ld = %ld", num1, num2, result);
-      ssd1306_SetCursor(30, 30);
+      ssd1306_SetCursor(20, 30);
       ssd1306_WriteString(result_str, Font_6x8, White);
       ssd1306_UpdateScreen();
 
