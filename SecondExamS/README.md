@@ -1,7 +1,7 @@
 README - Supplementary Final Exam - Arithmetic Operations System This project implements an arithmetic operations system using an STM32, with the following functionalities:
 
 Entry of values ​​using a hexadecimal keyboard. Arithmetic operation selection via UART communication. Show results on an OLED screen. LED indicator to show the system status based on the operation result. Evaluation Criteria Functionality (60%): Each functional requirement has equal weighting. Code Architecture (10%): Proper use of interrupts, peripherals and external libraries. Optimization (10%): Optimization of energy consumption and efficient use of memory. System Requirements Non-Functional Requirements LED Indicator: The system uses an LED connected to the board to indicate the status of the calculation. Hexadecimal Keyboard: An external keyboard is used for entry of numbers. Debug Port (UART): Serial communication with a PC using USART2 set to 115200 baud. OLED screen: Display of values, operations and results on an OLED screen connected via I2C. Functional Requirements Entering Values ​​via Keyboard:
-
+zzzzz
 The keypad accepts two numbers of up to 3 digits each. Basic input validation to ensure correct numbers are captured. Operation Selection via USART2:
 
 Through the UART interface, the user selects the arithmetic operation. '+' for addition '-' for subtraction '\*' for multiplication '/' for division The operator is displayed on the OLED screen. Show Entries:
