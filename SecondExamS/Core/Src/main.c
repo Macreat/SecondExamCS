@@ -74,6 +74,7 @@ ring_buffer_t usart2_rb;
 
 // variable declaration for UART communication
 uint8_t HB[] = " system  arithmetic : active \n\r";
+volatile uint8_t operation_flag = 0;
 
 
 /* USER CODE END PV */
@@ -110,9 +111,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       if (ring_buffer_is_full(&usart2_rb) != 0)
       {
         // Transmit "receiving data" message via USART2
-        printf("uSart buffer FULL\r\n");
+    	  HAL_UART_Transmit(&huart2, (uint8_t *)"Operator received. Press '=' to calculate.\r\n", 46, HAL_MAX_DELAY);
+
       }
-      HAL_UART_Transmit(&huart2, (uint8_t *)"receiving data from UART \r\n", 25, HAL_MAX_DELAY);
+      HAL_UART_Transmit(&huart2, (uint8_t *)" data received from UART \r\n", 25, HAL_MAX_DELAY);
+    }
+    else if (usart2_data == '=') // validate when user press ==
+    {
+    	operation_flag = 1;
+  	  HAL_UART_Transmit(&huart2, (uint8_t *)"calculating", 46, HAL_MAX_DELAY);
+
+
     }
     HAL_UART_Receive_IT(&huart2, &usart2_data, 1);
 
@@ -138,16 +147,31 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     else if (key_pressed >= '0' && key_pressed <= '9') // validation of numbers on HEXA keyboard
         {
-          ring_buffer_write(&keypad_rb, key_pressed);
-          if (ring_buffer_is_full(&keypad_rb) != 0)
+
+          if (ring_buffer_is_full(&keypad_rb) == 0)
           {
             // Transmit "receiving data" message via USART2
-              printf("ring buffer 1 FULL\r\n");
 
+              ring_buffer_write(&keypad_rb, key_pressed);
+              keypad_data = key_pressed;
           }
+		  else if (ring_buffer_is_full(&keypad1_rb) == 0)
+		  {
+              ring_buffer_write(&keypad1_rb, key_pressed);
+              keypad_data1 = key_pressed;
+
+		  }
+		  else {
+			    printf("both buffers full, do some operation or press '=' if youre already did it\r\n"); // if ring buffer is full, continue with the second buffer
+
+		  }
+
+
+
+
+
         }
 
-    keypad_data = key_pressed;
   }
 }
 
@@ -189,6 +213,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   ssd1306_Init();
   ssd1306_Fill(Black);
+  HAL_UART_Transmit(&huart2, HB, sizeof(HB) - 1, 100);
 
   ssd1306_WriteString("Starting ARITHMETIC \nsoftware...\r\n", Font_6x8, White);
 
@@ -211,22 +236,36 @@ int main(void)
     {
       HAL_GPIO_TogglePin(GPIOA, LD2_Pin);
       last_heartbeat_time = HAL_GetTick();
-      HAL_UART_Transmit(&huart2, HB, sizeof(HB) - 1, 100);
+      //HAL_UART_Transmit(&huart2, HB, sizeof(HB) - 1, 100);
     }
     // show entry data on OLED for UART and KEYPAD
-    if (keypad_data != 0xFF)
-       {
-         ssd1306_SetCursor(20, 20);
-         ssd1306_WriteString(&keypad_data, Font_11x18, White);
-         ssd1306_UpdateScreen();
-         keypad_data = 0xFF;
-       }
-    if (usart2_data != 0xFF) // for UART operation characther
-      {
-        ssd1306_SetCursor(20, 40);
-        ssd1306_WriteString(&usart2_data, Font_11x18, White);
-        ssd1306_UpdateScreen();
-        usart2_data = 0xFF;
+    // Mostrar en OLED los datos del teclado
+        if (keypad_data != 0xFF)
+        {
+          ssd1306_SetCursor(20, 20);
+          char buffer[2] = {keypad_data, '\0'};
+          ssd1306_WriteString(buffer, Font_11x18, White);
+          ssd1306_UpdateScreen();
+          keypad_data = 0xFF;
+        }
+
+        if (keypad_data1 != 0xFF)
+        {
+          ssd1306_SetCursor(40, 20);
+          char buffer[2] = {keypad_data1, '\0'};
+          ssd1306_WriteString(buffer, Font_11x18, White);
+          ssd1306_UpdateScreen();
+          keypad_data1 = 0xFF;
+        }
+
+        // show UART entry on OLED
+        if (usart2_data != 0xFF)
+        {
+          ssd1306_SetCursor(20, 40);
+          char buffer[2] = {usart2_data, '\0'};
+          ssd1306_WriteString(buffer, Font_11x18, White);
+          ssd1306_UpdateScreen();
+          usart2_data = 0xFF;
       }
 
 
